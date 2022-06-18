@@ -93,13 +93,14 @@ for csv_file in os.listdir("./image_labels_csv"):
     df_join = pd.merge(df_file_names, df_merged, on='file_id', how='left')
     df_join['Problems'] = df_join['Problems'].fillna('other')
     for index, label in enumerate(prominent_classes):
-        df_join[label] = df_join['Problems'].map(lambda problems:index if label in problems else 0)
-    df_join["other"] = df_join['Problems'].map(lambda problems: 1 if any(x in problems for x in other_classes) else 0)
+        df_join[label] = df_join['Problems'].map(lambda problems:1 if (label in problems) else 0)
+    print(df_join.describe())
+    df_join["other"] = df_join['Problems'].map(lambda problems: 1 if any(x in problems for x in other_classes + ['other']) else 0)
     df_current = pd.merge(df_current, df_join, on='Filename', how='left')
     df_current = df_current.drop(['file_id', 'Problems'], axis=1)
     df_current = df_current.drop_duplicates()
     df_current = df_current.groupby(['Filename', 'LabelText'], as_index=False).sum()
-    for label in prominent_classes:
+    for label in prominent_classes + ['other']:
         df_current[label] = df_current[label].map(lambda x: 1 if x>=1 else 0)
     if(multiclass):
         df_current['label'] = df_current[prominent_classes + ['other']].apply(lambda row: get_label(row, nb_occ), axis=1)
